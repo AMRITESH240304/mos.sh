@@ -1,5 +1,7 @@
 #include <iostream>
 #include <string>
+#include <vector>
+#include <algorithm>
 
 using namespace std;
 
@@ -12,6 +14,7 @@ int main() {
 
   string command;
   // TODO: Uncomment the code below to pass the first stage
+  vector<string> builtins = {"echo", "type", "exit"};
 
   while(true) {
     cout << "$ ";
@@ -23,6 +26,18 @@ int main() {
 
     if (command.find("echo ") == 0) {
       echoCommand(command.substr(5));
+      continue;
+    }
+
+    if (command.find("type ") == 0) {
+      string arg = command.substr(5); 
+
+      if (find(builtins.begin(), builtins.end(), arg) != builtins.end()) {
+          cout << arg << " is a shell builtin" << endl;
+      } else {
+          cout << arg << ": not found" << endl;
+      }
+
       continue;
     }
 
