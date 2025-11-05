@@ -3,6 +3,8 @@
 
 using namespace std;
 
+void echoCommand(string args);
+
 int main() {
   // Flush after every cout / cerr
   cout << unitbuf;
@@ -19,7 +21,16 @@ int main() {
       break;
     }
 
+    if (command.find("echo ") == 0) {
+      echoCommand(command.substr(5));
+      continue;
+    }
+
     cout << command << ": command not found" << endl;
   }
-    
+
+}
+
+void echoCommand(string args) {
+  cout << args << endl;
 }
