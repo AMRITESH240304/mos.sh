@@ -10,7 +10,11 @@ int main() {
 
   string command;
   // TODO: Uncomment the code below to pass the first stage
-  cout << "$ ";
-  getline(cin, command);
-  cout << command << ": command not found" << endl;
+
+  while(true) {
+    cout << "$ ";
+    getline(cin, command);
+    cout << command << ": command not found" << endl;
+  }
+    
 }
