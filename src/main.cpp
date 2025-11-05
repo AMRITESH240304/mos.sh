@@ -14,6 +14,11 @@ int main() {
   while(true) {
     cout << "$ ";
     getline(cin, command);
+
+    if (command == "exit 0") {
+      break;
+    }
+
     cout << command << ": command not found" << endl;
   }
     
