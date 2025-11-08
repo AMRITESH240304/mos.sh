@@ -117,6 +117,15 @@ void CommandHandler::handleType(const string& args, const vector<string>& builti
     }
 }
 
+void CommandHandler::handlePwd() {
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) != nullptr) {
+        cout << cwd << endl;
+    } else {
+        perror("getcwd() error");
+    }
+}
+
 bool CommandHandler::isBuiltin(const string& command, const vector<string>& builtins) {
     return find(builtins.begin(), builtins.end(), command) != builtins.end();
 }

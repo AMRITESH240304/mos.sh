@@ -11,7 +11,7 @@ int main() {
     cerr << unitbuf;
 
     string command;
-    vector<string> builtins = {"echo", "type", "exit"};
+    vector<string> builtins = {"echo", "type", "exit", "pwd"};
 
     while(true) {
         cout << "$ ";
@@ -32,6 +32,11 @@ int main() {
 
         if (command.find("type ") == 0) {
             CommandHandler::handleType(command.substr(5), builtins);
+            continue;
+        }
+
+        if (command == "pwd") {
+            CommandHandler::handlePwd();
             continue;
         }
         try {

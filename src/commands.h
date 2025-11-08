@@ -12,6 +12,7 @@ public:
     static void handleType(const string& args, const vector<string>& builtins);
     static bool isBuiltin(const string& command, const vector<string>& builtins);
     static void externalProgram(const string& command);
+    static void handlePwd();
 };
 
 #endif // COMMANDS_H
