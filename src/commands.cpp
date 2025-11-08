@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 using namespace std;
 
@@ -114,6 +115,24 @@ void CommandHandler::handleType(const string& args, const vector<string>& builti
             cout << args << ": not found" << endl;
             return;
         }
+    }
+}
+
+void CommandHandler::handleAboslutePath(const string& path) {
+    if (path.empty() || path[0] != '/') {
+        std::cout << "cd: " << path << ": Only absolute paths supported" << std::endl;
+        return;
+    }
+
+    struct stat info;
+    if (stat(path.c_str(), &info) != 0) {
+        std::cout << "cd: " << path << ": No such file or directory" << std::endl;
+        return;
+    }
+
+    if (chdir(path.c_str()) != 0) {
+        std::perror("cd failed");
+        return;
     }
 }
 

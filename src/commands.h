@@ -13,6 +13,7 @@ public:
     static bool isBuiltin(const string& command, const vector<string>& builtins);
     static void externalProgram(const string& command);
     static void handlePwd();
+    static void handleAboslutePath(const string& path);
 };
 
 #endif // COMMANDS_H

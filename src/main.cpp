@@ -11,7 +11,7 @@ int main() {
     cerr << unitbuf;
 
     string command;
-    vector<string> builtins = {"echo", "type", "exit", "pwd"};
+    vector<string> builtins = {"echo", "type", "exit", "pwd", "cd"};
 
     while(true) {
         cout << "$ ";
@@ -37,6 +37,14 @@ int main() {
 
         if (command == "pwd") {
             CommandHandler::handlePwd();
+            continue;
+        }
+
+        if (command.find("cd ") == 0 || command == "cd") {
+            if (command == "cd") {
+                continue;
+            }
+            CommandHandler::handleAboslutePath(command.substr(3));
             continue;
         }
         try {
