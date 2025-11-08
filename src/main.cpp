@@ -34,8 +34,13 @@ int main() {
             CommandHandler::handleType(command.substr(5), builtins);
             continue;
         }
-
-        cout << command << ": command not found" << endl;
+        try {
+            CommandHandler::externalProgram(command);
+            continue;
+        }
+        catch (...) {
+          cout << command << ": command not found" << endl;
+        }
     }
 
     return 0;

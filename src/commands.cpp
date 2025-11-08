@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <unistd.h>
+#include <sys/wait.h>
 
 using namespace std;
 
@@ -29,6 +30,65 @@ vector<string> split(string str, char delimiter = ':') {
     }
 
     return result;
+}
+
+vector<string> split_args(string str, char delimiter = ' ') {
+    vector<string> result;
+    string token = "";
+    for (auto i:str) {
+        if (i == delimiter) {
+            if (!token.empty()) {
+                result.push_back(token);
+
+                token = "";
+            }
+        }
+        else {
+            token += i;
+        }
+    }
+
+    if (!token.empty()) {
+        result.push_back(token);
+    }
+
+    return result;
+}
+
+void CommandHandler::externalProgram(const string& command) {
+    const char* pathenv = getenv("PATH");
+    if (pathenv) {
+        vector<string> paths = split(pathenv);
+        vector<string> args = split_args(command);
+        
+        vector<char*> argv;
+
+        for (auto& arg : args){
+            argv.push_back(const_cast<char*>(arg.c_str()));
+        }
+         
+        argv.push_back(nullptr);  
+
+        for (auto dir : paths) {
+            string fullpath = dir + "/" + args[0];
+            if (access(fullpath.c_str(), X_OK) == 0) {
+                pid_t pid = fork();
+                if (pid == 0) {
+                    execv(fullpath.c_str(), argv.data());
+                    perror("execv failed");
+                    exit(1);
+                } else if (pid > 0) {
+                    int status;
+                    waitpid(pid, &status, 0);
+                    return;
+                } else {
+                    perror("fork failed");
+                    return;
+                }
+            }
+        }
+    }
+    throw runtime_error("Command not found");
 }
 
 void CommandHandler::handleType(const string& args, const vector<string>& builtins) {
