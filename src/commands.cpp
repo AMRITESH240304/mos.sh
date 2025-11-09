@@ -120,6 +120,17 @@ void CommandHandler::handleType(const string& args, const vector<string>& builti
 
 void CommandHandler::handleAboslutePath(const string& path) {
 
+    if (path[0] == '~') {
+        const char* home = getenv("HOME");
+        if (home) {
+            string newPath = string(home) + path.substr(1);
+            if (chdir(newPath.c_str()) != 0) {
+                std::perror("cd failed");
+            }
+            return;
+        }
+    }
+
     struct stat info;
     if (stat(path.c_str(), &info) != 0) {
         std::cout << "cd: " << path << ": No such file or directory" << std::endl;
