@@ -119,10 +119,6 @@ void CommandHandler::handleType(const string& args, const vector<string>& builti
 }
 
 void CommandHandler::handleAboslutePath(const string& path) {
-    if (path.empty() || path[0] != '/') {
-        std::cout << "cd: " << path << ": Only absolute paths supported" << std::endl;
-        return;
-    }
 
     struct stat info;
     if (stat(path.c_str(), &info) != 0) {
