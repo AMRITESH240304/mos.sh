@@ -44,7 +44,7 @@ int main() {
             if (command == "cd") {
                 continue;
             }
-            CommandHandler::handleAboslutePath(command.substr(3));
+            CommandHandler::handleNavigation(command.substr(3));
             continue;
         }
         try {

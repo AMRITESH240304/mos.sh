@@ -8,8 +8,66 @@
 
 using namespace std;
 
+vector<string> split_args(string str, char delimiter = ' ') {
+    vector<string> args;
+    string current;
+    bool in_quotes = false;
+
+    for (size_t i = 0; i < str.size(); ++i) {
+        char c = str[i];
+
+        if (c == '\'') {
+            in_quotes = !in_quotes;
+        } else if (isspace(c) && !in_quotes) {
+            if (!current.empty()) {
+                args.push_back(current);
+                current.clear();
+            }
+        } else {
+            current += c;
+        }
+    }
+
+    if (!current.empty()) args.push_back(current);
+    return args;
+}
+
 void CommandHandler::handleEcho(const string& args) {
-    cout << args << endl;
+
+    string result;
+    bool inQuotes = false;
+    string currentWord;
+
+    for (int i = 0; i < args.size(); i++) {
+        char c = args[i];
+
+        if (c == '\'') {
+            inQuotes = !inQuotes;
+            continue;
+        }
+
+        if (inQuotes) {
+            currentWord += c;
+        }
+        else {
+            if (isspace(c)) {
+                if (!currentWord.empty()) {
+                    if (!result.empty()) result += " ";
+                    result += currentWord;
+                    currentWord.clear();
+                }
+                continue;
+            }
+            currentWord += c;
+        }
+    }
+
+    if (!currentWord.empty()) {
+        if (!result.empty()) result += " ";
+        result += currentWord;
+    }
+
+    cout << result << std::endl;
 }
 
 vector<string> split(string str, char delimiter = ':') {
@@ -20,29 +78,6 @@ vector<string> split(string str, char delimiter = ':') {
         if (i == delimiter) {
             result.push_back(token);
             token = "";
-        }
-        else {
-            token += i;
-        }
-    }
-
-    if (!token.empty()) {
-        result.push_back(token);
-    }
-
-    return result;
-}
-
-vector<string> split_args(string str, char delimiter = ' ') {
-    vector<string> result;
-    string token = "";
-    for (auto i:str) {
-        if (i == delimiter) {
-            if (!token.empty()) {
-                result.push_back(token);
-
-                token = "";
-            }
         }
         else {
             token += i;
@@ -118,7 +153,7 @@ void CommandHandler::handleType(const string& args, const vector<string>& builti
     }
 }
 
-void CommandHandler::handleAboslutePath(const string& path) {
+void CommandHandler::handleNavigation(const string& path) {
 
     if (path[0] == '~') {
         const char* home = getenv("HOME");
