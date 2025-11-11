@@ -14,6 +14,7 @@ public:
     static void externalProgram(const string& command);
     static void handlePwd();
     static void handleNavigation(const string& path);
+    static void handleCat(const string& filepath);
 };
 
 #endif // COMMANDS_H

@@ -5,20 +5,24 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
 vector<string> split_args(string str, char delimiter = ' ') {
     vector<string> args;
     string current;
-    bool in_quotes = false;
+    char quote_char = '\0';  
 
     for (size_t i = 0; i < str.size(); ++i) {
         char c = str[i];
 
-        if (c == '\'') {
-            in_quotes = !in_quotes;
-        } else if (isspace(c) && !in_quotes) {
+        if ((c == '\'' || c == '\"') && quote_char == '\0') {
+            quote_char = c;
+        } else if (c == quote_char) {
+            quote_char = '\0';
+        } else if (isspace(c) && quote_char == '\0') {
             if (!current.empty()) {
                 args.push_back(current);
                 current.clear();
@@ -33,20 +37,22 @@ vector<string> split_args(string str, char delimiter = ' ') {
 }
 
 void CommandHandler::handleEcho(const string& args) {
-
     string result;
-    bool inQuotes = false;
+    char quote_char = '\0';  
     string currentWord;
 
-    for (int i = 0; i < args.size(); i++) {
+    for (size_t i = 0; i < args.size(); i++) {
         char c = args[i];
 
-        if (c == '\'') {
-            inQuotes = !inQuotes;
+        if ((c == '\'' || c == '\"') && quote_char == '\0') {
+            quote_char = c;
+            continue;
+        } else if (c == quote_char) {
+            quote_char = '\0';
             continue;
         }
 
-        if (inQuotes) {
+        if (quote_char != '\0') {
             currentWord += c;
         }
         else {
@@ -56,9 +62,9 @@ void CommandHandler::handleEcho(const string& args) {
                     result += currentWord;
                     currentWord.clear();
                 }
-                continue;
+            } else {
+                currentWord += c;
             }
-            currentWord += c;
         }
     }
 
@@ -66,8 +72,8 @@ void CommandHandler::handleEcho(const string& args) {
         if (!result.empty()) result += " ";
         result += currentWord;
     }
-
-    cout << result << std::endl;
+    
+    cout << result << endl;
 }
 
 vector<string> split(string str, char delimiter = ':') {
@@ -89,6 +95,22 @@ vector<string> split(string str, char delimiter = ':') {
     }
 
     return result;
+}
+
+void CommandHandler::handleCat(const string& filePath) {
+    vector<string> result = split_args(filePath);
+
+    for (auto& file : result) {
+        ifstream infile(file);
+        if (!infile) {
+            cerr << "cat: " << file << ": No such file or directory" << endl;
+            continue;
+        }
+
+        stringstream buffer;
+        cout << buffer.str();
+        infile.close();
+    }
 }
 
 void CommandHandler::externalProgram(const string& command) {

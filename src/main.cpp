@@ -40,6 +40,13 @@ int main() {
             continue;
         }
 
+        if (command == "cat" || command.find("cat ") == 0) {
+            if (command == "cat") {
+                continue;
+            }
+            CommandHandler::handleCat(command.substr(4));
+        }
+
         if (command.find("cd ") == 0 || command == "cd") {
             if (command == "cd") {
                 continue;
