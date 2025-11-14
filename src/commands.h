@@ -15,6 +15,7 @@ public:
     static void handlePwd();
     static void handleNavigation(const string& path);
     static void handleCat(const string& filepath);
+    static void HandleRedirections(const vector<string>& args);
 };
 
 #endif // COMMANDS_H
