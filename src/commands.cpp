@@ -14,10 +14,22 @@ vector<string> split_args(string str, char delimiter = ' ') {
     vector<string> args;
     string current;
     char quote_char = '\0';  
+    bool escaped = false;
 
     for (size_t i = 0; i < str.size(); ++i) {
         char c = str[i];
 
+        if (c == '\\' && quote_char == '\0' && !escaped) {
+            escaped = true;
+            continue;
+        }
+
+        if (escaped) {
+            current += c;
+            escaped = false;
+            continue;
+        }
+        
         if ((c == '\'' || c == '\"') && quote_char == '\0') {
             quote_char = c;
         } else if (c == quote_char) {
@@ -40,9 +52,21 @@ void CommandHandler::handleEcho(const string& args) {
     string result;
     char quote_char = '\0';  
     string currentWord;
+    bool escaped = false;
 
     for (size_t i = 0; i < args.size(); i++) {
         char c = args[i];
+
+        if (c == '\\' && quote_char == '\0' && !escaped) {
+            escaped = true;
+            continue;
+        }
+
+        if (escaped) {
+            currentWord += c;
+            escaped = false;
+            continue;
+        }
 
         if ((c == '\'' || c == '\"') && quote_char == '\0') {
             quote_char = c;
