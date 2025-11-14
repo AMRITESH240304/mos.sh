@@ -18,9 +18,22 @@ vector<string> split_args(string str, char delimiter = ' ') {
 
     for (size_t i = 0; i < str.size(); ++i) {
         char c = str[i];
+        if (c == '\\' && !escaped) {
+            if (quote_char == '"') {
+                char next = (i + 1 < str.size()) ? str[i+1] : '\0';
+                if (next == '"' || next == '\\') {
+                    escaped = true;
+                    continue;
+                }
+                current += '\\';
+                continue;
+            }
 
-        if (c == '\\' && quote_char == '\0' && !escaped) {
-            escaped = true;
+            if (quote_char == '\0') {
+                escaped = true;
+                continue;
+            }
+            current += '\\';
             continue;
         }
 
@@ -29,7 +42,7 @@ vector<string> split_args(string str, char delimiter = ' ') {
             escaped = false;
             continue;
         }
-        
+
         if ((c == '\'' || c == '\"') && quote_char == '\0') {
             quote_char = c;
         } else if (c == quote_char) {
@@ -57,8 +70,22 @@ void CommandHandler::handleEcho(const string& args) {
     for (size_t i = 0; i < args.size(); i++) {
         char c = args[i];
 
-        if (c == '\\' && quote_char == '\0' && !escaped) {
-            escaped = true;
+        if (c == '\\' && !escaped) {
+            if (quote_char == '"') {
+                char next = (i + 1 < args.size()) ? args[i+1] : '\0';
+                if (next == '"' || next == '\\') {
+                    escaped = true;
+                    continue;
+                }
+                currentWord += '\\';
+                continue;
+            }
+
+            if (quote_char == '\0') {
+                escaped = true;
+                continue;
+            }
+            currentWord += '\\';
             continue;
         }
 
