@@ -1,7 +1,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unistd.h>
 #include "commands.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -10,56 +12,64 @@ int main() {
     cout << unitbuf;
     cerr << unitbuf;
 
-    string command;
+    string input;
     vector<string> builtins = {"echo", "type", "exit", "pwd", "cd"};
 
-    while(true) {
+    while (true) {
         cout << "$ ";
-        getline(cin, command);
+        if (!getline(cin, input)) break;
 
-        if (command == "exit 0") {
+        if (input == "exit 0" || input == "exit") {
             break;
         }
 
-        if (command.find("echo ") == 0 || command == "echo") {
-          if (command == "echo") {
-              CommandHandler::handleEcho("");
-              continue;
-          }
-            CommandHandler::handleEcho(command.substr(5));
+        ParsedCommand parsed = parseCommand(input);
+
+        int savedStdout = -1;
+        bool redirected = CommandHandler::HandleRedirections(parsed, savedStdout);
+
+        string cmd = parsed.cmd;
+        if (cmd.empty()) {
+            cerr << "Error: empty command\n";
+            if (redirected && savedStdout != -1) {
+                dup2(savedStdout, STDOUT_FILENO);
+                close(savedStdout);
+            }
             continue;
         }
 
-        if (command.find("type ") == 0) {
-            CommandHandler::handleType(command.substr(5), builtins);
-            continue;
-        }
+        vector<string> args = split_args(cmd);
+        string name = args.empty() ? "" : args[0];
+        string payload = (args.size() > 1) ? cmd.substr(name.size() + 1) : "";
 
-        if (command == "pwd") {
+        if (name == "echo") {
+            CommandHandler::handleEcho(payload);
+        }
+        else if (name == "type") {
+            CommandHandler::handleType(payload, builtins);
+        }
+        else if (name == "pwd") {
             CommandHandler::handlePwd();
-            continue;
+        }
+        else if (name == "cd") {
+            CommandHandler::handleNavigation(payload);
+        }
+        else if (name == "cat") {
+            if (!payload.empty())
+                CommandHandler::handleCat(payload);
+        }
+        else {
+            try {
+                CommandHandler::externalProgram(cmd);
+            } catch (...) {
+                cout << name << ": command not found" << endl;
+            }
         }
 
-        if (command == "cat" || command.find("cat ") == 0) {
-            if (command == "cat") {
-                continue;
-            }
-            CommandHandler::handleCat(command.substr(4));
-        }
-
-        if (command.find("cd ") == 0 || command == "cd") {
-            if (command == "cd") {
-                continue;
-            }
-            CommandHandler::handleNavigation(command.substr(3));
-            continue;
-        }
-        try {
-            CommandHandler::externalProgram(command);
-            continue;
-        }
-        catch (...) {
-          cout << command << ": command not found" << endl;
+        if (redirected && savedStdout != -1) {
+            fflush(stdout);
+            dup2(savedStdout, STDOUT_FILENO);
+            close(savedStdout);
         }
     }
 

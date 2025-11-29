@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 #include <fstream>
 #include <sstream>
+#include <fcntl.h>
+#include <cstdio>
 
 using namespace std;
 
@@ -34,6 +36,7 @@ void CommandHandler::handleCat(const string& filePath) {
         }
 
         stringstream buffer;
+        buffer << infile.rdbuf();
         cout << buffer.str();
         infile.close();
     }
@@ -137,4 +140,47 @@ void CommandHandler::handlePwd() {
 
 bool CommandHandler::isBuiltin(const string& command, const vector<string>& builtins) {
     return find(builtins.begin(), builtins.end(), command) != builtins.end();
+}
+
+bool CommandHandler::HandleRedirections(const ParsedCommand& parsed, int& savedStdout) {
+    if (!parsed.redirect) {
+        return false;
+    }
+
+    if (parsed.outputFile.empty()) {
+        cerr << "redirect: missing output file" << endl;
+        return false;
+    }
+
+    if (parsed.redirectFd != STDOUT_FILENO) {
+        cerr << "redirect: unsupported file descriptor " << parsed.redirectFd << endl;
+        return false;
+    }
+
+    int targetFd = open(parsed.outputFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (targetFd == -1) {
+        perror("open");
+        return false;
+    }
+
+    savedStdout = dup(STDOUT_FILENO);
+    if (savedStdout == -1) {
+        perror("dup");
+        close(targetFd);
+        return false;
+    }
+
+    cout.flush();
+    fflush(stdout);
+
+    if (dup2(targetFd, STDOUT_FILENO) == -1) {
+        perror("dup2");
+        close(targetFd);
+        close(savedStdout);
+        savedStdout = -1;
+        return false;
+    }
+
+    close(targetFd);
+    return true;
 }

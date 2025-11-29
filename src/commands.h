@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include "helper.h"
 
 using namespace std;
 
@@ -15,7 +16,7 @@ public:
     static void handlePwd();
     static void handleNavigation(const string& path);
     static void handleCat(const string& filepath);
-    static void HandleRedirections(const vector<string>& args);
+    static bool HandleRedirections(const ParsedCommand& parsed, int& savedStdout);
 };
 
 #endif // COMMANDS_H
