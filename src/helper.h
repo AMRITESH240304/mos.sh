@@ -7,6 +7,7 @@ struct ParsedCommand {
     std::string cmd;
     std::string outputFile;
     bool redirect = false;
+    bool append = false;
     int redirectFd = 1;
 };
 

@@ -14,7 +14,14 @@ ParsedCommand parseCommand(const string& input){
     std::string working = input;
     trim(working);
 
-    size_t pos = working.find('>');
+    size_t pos = working.find(">>");
+    bool isAppend = false;
+
+    if (pos != string::npos) {
+        isAppend = true;
+    } else {
+        pos = working.find('>');
+    }
 
     if (pos != std::string::npos) {
         size_t fdStart = pos;
@@ -32,7 +39,7 @@ ParsedCommand parseCommand(const string& input){
                 }
             }
 
-            if (digitsOnly && (fdStart == 0 || isspace(static_cast<unsigned char>(working[fdStart - 1])))) {
+            if (digitsOnly && (fdStart == 0 || isspace((unsigned char)working[fdStart - 1]))) {
                 pc.redirectFd = stoi(working.substr(fdStart, pos - fdStart));
             } else {
                 hasExplicitFd = false;
@@ -44,8 +51,11 @@ ParsedCommand parseCommand(const string& input){
         }
 
         pc.redirect = true;
+        pc.append = isAppend;
+
         pc.cmd = working.substr(0, fdStart);
-        pc.outputFile = working.substr(pos + 1);
+        pc.outputFile = working.substr(pos + (isAppend ? 2 : 1));
+
         trim(pc.cmd);
         trim(pc.outputFile);
     } else {

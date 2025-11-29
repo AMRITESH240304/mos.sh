@@ -157,7 +157,14 @@ bool CommandHandler::HandleRedirections(const ParsedCommand& parsed, int& savedS
         return false;
     }
 
-    int targetFd = open(parsed.outputFile.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    int flags = O_WRONLY | O_CREAT;
+
+    if (parsed.append)
+        flags |= O_APPEND;
+    else
+        flags |= O_TRUNC;
+
+    int targetFd = open(parsed.outputFile.c_str(), flags, 0644);
     if (targetFd == -1) {
         perror("open");
         return false;
