@@ -32,7 +32,7 @@ int main() {
         if (cmd.empty()) {
             cerr << "Error: empty command\n";
             if (redirected && savedStdout != -1) {
-                dup2(savedStdout, STDOUT_FILENO);
+                dup2(savedStdout, parsed.redirectFd);
                 close(savedStdout);
             }
             continue;
@@ -68,7 +68,7 @@ int main() {
 
         if (redirected && savedStdout != -1) {
             fflush(stdout);
-            dup2(savedStdout, STDOUT_FILENO);
+            dup2(savedStdout, parsed.redirectFd);
             close(savedStdout);
         }
     }

@@ -152,7 +152,7 @@ bool CommandHandler::HandleRedirections(const ParsedCommand& parsed, int& savedS
         return false;
     }
 
-    if (parsed.redirectFd != STDOUT_FILENO) {
+    if (parsed.redirectFd != STDOUT_FILENO && parsed.redirectFd != STDERR_FILENO) {
         cerr << "redirect: unsupported file descriptor " << parsed.redirectFd << endl;
         return false;
     }
@@ -163,24 +163,26 @@ bool CommandHandler::HandleRedirections(const ParsedCommand& parsed, int& savedS
         return false;
     }
 
-    savedStdout = dup(STDOUT_FILENO);
-    if (savedStdout == -1) {
+    int saved = dup(parsed.redirectFd);
+    if (saved == -1) {
         perror("dup");
         close(targetFd);
         return false;
     }
 
     cout.flush();
+    cerr.flush();
     fflush(stdout);
+    fflush(stderr);
 
-    if (dup2(targetFd, STDOUT_FILENO) == -1) {
+    if (dup2(targetFd, parsed.redirectFd) == -1) {
         perror("dup2");
         close(targetFd);
-        close(savedStdout);
-        savedStdout = -1;
+        close(saved);
         return false;
     }
 
     close(targetFd);
+    savedStdout = saved;
     return true;
 }
