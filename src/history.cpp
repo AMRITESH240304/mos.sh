@@ -9,6 +9,7 @@
 using namespace std;
 
 vector<string> History::history;
+size_t History::lastFlushedIdx = 0;
 
 void History::add(const string& cmd) {
     if (!cmd.empty()) {
@@ -64,6 +65,27 @@ void History::handle(const string& payload) {
             out << line << '\n'; 
         }
         out.close();
+
+        lastFlushedIdx = history.size();
+        return;
+    }
+
+    if (!args.empty() && args[0] == "-a") {
+        if (args.size() < 2) {
+            cout << "history: -a requires a file path\n";
+            return;
+        }
+        const string& path = args[1];
+        ofstream out(path, ios::out | ios::app);
+        if (!out.is_open()) {
+            cout << "history: cannot append to " << path << "\n";
+            return;
+        }
+        for (size_t i = lastFlushedIdx; i < history.size(); ++i) {
+            out << history[i] << '\n';
+        }
+        out.close();
+        lastFlushedIdx = history.size();
         return;
     }
 
