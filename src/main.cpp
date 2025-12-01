@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <unistd.h>
+#include <fstream>
+#include <sstream>
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "commands.h"
@@ -75,25 +77,48 @@ int main() {
                 CommandHandler::handleCat(payload);
         }
         else if (name == "history") {
+            vector<string> historyArgs = split_args(payload);
+            
+            if (!historyArgs.empty() && historyArgs[0] == "-r") {
+                if (historyArgs.size() < 2) {
+                    cout << "history: -r requires a file path" << endl;
+                } else {
+                    string filepath = historyArgs[1];
+                    ifstream file(filepath);
+                    
+                    if (!file.is_open()) {
+                        cout << "history: cannot read " << filepath << endl;
+                    } else {
+                        string line;
+                        while (getline(file, line)) {
+                            if (!line.empty()) {
+                                add_history(line.c_str());
+                                history_vec.push_back(line);
+                            }
+                        }
+                        file.close();
+                    }
+                }
+            } else {
+                int n = history_vec.size();
 
-            int n = history_vec.size();
+                if (!payload.empty() && historyArgs[0] != "-r") {
+                    try {
+                        n = stoi(payload);
+                    } catch (...) {
+                        n = history_vec.size();
+                    }
+                }
 
-            if (!payload.empty()) {
-                try {
-                    n = stoi(payload);
-                } catch (...) {
+                if (n > (int)history_vec.size()) {
                     n = history_vec.size();
                 }
-            }
 
-            if (n > (int)history_vec.size()) {
-                n = history_vec.size();
-            }
+                int start = history_vec.size() - n;
 
-            int start = history_vec.size() - n;
-
-            for (int i = start; i < (int)history_vec.size(); ++i) {
-                cout << "    " << i + 1 << "  " << history_vec[i] << endl;
+                for (int i = start; i < (int)history_vec.size(); ++i) {
+                    cout << "    " << i + 1 << "  " << history_vec[i] << endl;
+                }
             }
         }
         else {
