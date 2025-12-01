@@ -67,8 +67,25 @@ int main() {
                 CommandHandler::handleCat(payload);
         }
         else if (name == "history") {
-            for (size_t i = 0; i < history.size(); ++i) {
-                cout << i + 1 << " " << history[i] << endl;
+
+            int n = history.size();
+
+            if (!payload.empty()) {
+                try {
+                    n = stoi(payload);
+                } catch (...) {
+                    n = history.size();
+                }
+            }
+
+            if (n > (int)history.size()) {
+                n = history.size();
+            }
+
+            int start = history.size() - n;
+
+            for (int i = start; i < (int)history.size(); ++i) {
+                cout << "    " << i + 1 << "  " << history[i] << endl;
             }
         }
         else {
