@@ -17,6 +17,7 @@ public:
     static void handleNavigation(const string& path);
     static void handleCat(const string& filepath);
     static bool HandleRedirections(const ParsedCommand& parsed, int& savedStdout);
+    static void handlePipeline(const std::string &left, const std::string &right);
 };
 
 #endif // COMMANDS_H

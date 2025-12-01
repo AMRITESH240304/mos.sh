@@ -11,6 +11,13 @@ struct ParsedCommand {
     int redirectFd = 1;
 };
 
+struct Pipeline {
+    bool isPipe = false;
+    std::string leftCmd;
+    std::string rightCmd;
+};
+
 ParsedCommand parseCommand(const std::string& input);
+Pipeline parsePipeline(const std::string& input);
 
 #endif

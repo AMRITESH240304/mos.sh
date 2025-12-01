@@ -22,6 +22,12 @@ int main() {
         if (input == "exit 0" || input == "exit") {
             break;
         }
+        Pipeline pip = parsePipeline(input);
+
+        if (pip.isPipe) {
+            CommandHandler::handlePipeline(pip.leftCmd, pip.rightCmd);
+            continue;
+        }
 
         ParsedCommand parsed = parseCommand(input);
 

@@ -42,6 +42,47 @@ void CommandHandler::handleCat(const string& filePath) {
     }
 }
 
+void CommandHandler::handlePipeline(const std::string &left, const std::string &right) {
+    int pipefd[2];
+    if (pipe(pipefd) == -1) {
+        perror("pipe");
+        return;
+    }
+
+    pid_t pid1 = fork();
+    if (pid1 == 0) {
+        // Child 1 — producer (left command)
+        close(pipefd[0]);                // Close read end
+        dup2(pipefd[1], STDOUT_FILENO);  // Redirect stdout → pipe
+        close(pipefd[1]);
+
+        execlp("sh", "sh", "-c", left.c_str(), NULL);
+        perror("execlp");
+        exit(1);
+    }
+
+    pid_t pid2 = fork();
+    if (pid2 == 0) {
+        // Child 2 — consumer (right command)
+        close(pipefd[1]);                // Close write end
+        dup2(pipefd[0], STDIN_FILENO);   // Redirect stdin ← pipe
+        close(pipefd[0]);
+
+        execlp("sh", "sh", "-c", right.c_str(), NULL);
+        perror("execlp");
+        exit(1);
+    }
+
+    // Parent closes both ends
+    close(pipefd[0]);
+    close(pipefd[1]);
+
+    // Wait for both commands
+    waitpid(pid1, NULL, 0);
+    waitpid(pid2, NULL, 0);
+}
+
+
 void CommandHandler::externalProgram(const string& command) {
     const char* pathenv = getenv("PATH");
     if (pathenv) {

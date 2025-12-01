@@ -65,6 +65,17 @@ ParsedCommand parseCommand(const string& input){
     return pc;
 }
 
+Pipeline parsePipeline(const std::string &input) {
+    Pipeline p;
+    size_t pos = input.find("|");
+    if (pos != std::string::npos) {
+        p.isPipe = true;
+        p.leftCmd = input.substr(0, pos);
+        p.rightCmd = input.substr(pos + 1);
+    }
+    return p;
+}
+
 vector<string> split(string str, char delimiter) {
     vector<string> result;
     string token = "";
