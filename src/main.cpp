@@ -13,11 +13,13 @@ int main() {
     cerr << unitbuf;
 
     string input;
-    vector<string> builtins = {"echo", "type", "exit", "pwd", "cd"};
+    vector<string> builtins = {"echo", "type", "exit", "pwd", "cd", "history"};
+    vector<string> history;
 
     while (true) {
         cout << "$ ";
         if (!getline(cin, input)) break;
+        history.push_back(input);
 
         if (input == "exit 0" || input == "exit") {
             break;
@@ -63,6 +65,11 @@ int main() {
         else if (name == "cat") {
             if (!payload.empty())
                 CommandHandler::handleCat(payload);
+        }
+        else if (name == "history") {
+            for (size_t i = 0; i < history.size(); ++i) {
+                cout << i + 1 << " " << history[i] << endl;
+            }
         }
         else {
             try {
