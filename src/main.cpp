@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <unistd.h>
+#include <readline/readline.h>
+#include <readline/history.h>
 #include "commands.h"
 #include "utils.h"
 
@@ -12,18 +14,25 @@ int main() {
     cout << unitbuf;
     cerr << unitbuf;
 
-    string input;
     vector<string> builtins = {"echo", "type", "exit", "pwd", "cd", "history"};
-    vector<string> history;
+    vector<string> history_vec;
 
     while (true) {
-        cout << "$ ";
-        if (!getline(cin, input)) break;
-        history.push_back(input);
+        char* input_cstr = readline("$ ");
+        if (!input_cstr) break;
+        
+        string input(input_cstr);
+        free(input_cstr);
+        
+        if (!input.empty()) {
+            add_history(input.c_str());
+            history_vec.push_back(input);
+        }
 
         if (input == "exit 0" || input == "exit") {
             break;
         }
+        
         Pipeline pip = parsePipeline(input);
 
         if (pip.isPipe) {
@@ -38,7 +47,6 @@ int main() {
 
         string cmd = parsed.cmd;
         if (cmd.empty()) {
-            cerr << "Error: empty command\n";
             if (redirected && savedStdout != -1) {
                 dup2(savedStdout, parsed.redirectFd);
                 close(savedStdout);
@@ -68,24 +76,24 @@ int main() {
         }
         else if (name == "history") {
 
-            int n = history.size();
+            int n = history_vec.size();
 
             if (!payload.empty()) {
                 try {
                     n = stoi(payload);
                 } catch (...) {
-                    n = history.size();
+                    n = history_vec.size();
                 }
             }
 
-            if (n > (int)history.size()) {
-                n = history.size();
+            if (n > (int)history_vec.size()) {
+                n = history_vec.size();
             }
 
-            int start = history.size() - n;
+            int start = history_vec.size() - n;
 
-            for (int i = start; i < (int)history.size(); ++i) {
-                cout << "    " << i + 1 << "  " << history[i] << endl;
+            for (int i = start; i < (int)history_vec.size(); ++i) {
+                cout << "    " << i + 1 << "  " << history_vec[i] << endl;
             }
         }
         else {
