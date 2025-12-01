@@ -8,6 +8,7 @@
 #include <readline/history.h>
 #include "commands.h"
 #include "utils.h"
+#include "history.h"
 
 using namespace std;
 
@@ -17,7 +18,7 @@ int main() {
     cerr << unitbuf;
 
     vector<string> builtins = {"echo", "type", "exit", "pwd", "cd", "history"};
-    vector<string> history_vec;
+    // vector<string> history_vec;
 
     while (true) {
         char* input_cstr = readline("$ ");
@@ -27,8 +28,7 @@ int main() {
         free(input_cstr);
         
         if (!input.empty()) {
-            add_history(input.c_str());
-            history_vec.push_back(input);
+            History::add(input);
         }
 
         if (input == "exit 0" || input == "exit") {
@@ -77,49 +77,7 @@ int main() {
                 CommandHandler::handleCat(payload);
         }
         else if (name == "history") {
-            vector<string> historyArgs = split_args(payload);
-            
-            if (!historyArgs.empty() && historyArgs[0] == "-r") {
-                if (historyArgs.size() < 2) {
-                    cout << "history: -r requires a file path" << endl;
-                } else {
-                    string filepath = historyArgs[1];
-                    ifstream file(filepath);
-                    
-                    if (!file.is_open()) {
-                        cout << "history: cannot read " << filepath << endl;
-                    } else {
-                        string line;
-                        while (getline(file, line)) {
-                            if (!line.empty()) {
-                                add_history(line.c_str());
-                                history_vec.push_back(line);
-                            }
-                        }
-                        file.close();
-                    }
-                }
-            } else {
-                int n = history_vec.size();
-
-                if (!payload.empty() && historyArgs[0] != "-r") {
-                    try {
-                        n = stoi(payload);
-                    } catch (...) {
-                        n = history_vec.size();
-                    }
-                }
-
-                if (n > (int)history_vec.size()) {
-                    n = history_vec.size();
-                }
-
-                int start = history_vec.size() - n;
-
-                for (int i = start; i < (int)history_vec.size(); ++i) {
-                    cout << "    " << i + 1 << "  " << history_vec[i] << endl;
-                }
-            }
+            History::handle(payload);
         }
         else {
             try {

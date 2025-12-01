@@ -40,6 +40,11 @@
         "queue": "cpp",
         "stack": "cpp",
         "algorithm": "cpp",
-        "__config": "cpp"
+        "__config": "cpp",
+        "__split_buffer": "cpp",
+        "fstream": "cpp",
+        "sstream": "cpp",
+        "vector": "cpp",
+        "iomanip": "cpp"
     }
 }
