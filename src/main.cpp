@@ -9,6 +9,9 @@
 #include "commands.h"
 #include "utils.h"
 #include "history.h"
+#include <dirent.h>
+#include <sys/stat.h>
+#include <algorithm>
 
 using namespace std;
 static vector<string> builtins = {"echo", "type", "exit", "pwd", "cd", "history"};
@@ -17,6 +20,7 @@ static vector<string> builtins = {"echo", "type", "exit", "pwd", "cd", "history"
 // https://thoughtbot.com/blog/tab-completion-in-gnu-readline
 static char** charater_command_completion(const char *, int, int);
 static char* character_command_generator(const char *, int);
+static char* external_command_generator(const char *, int);
 
 int main() {
     // Flush after every cout / cerr
@@ -130,6 +134,55 @@ static char* character_command_generator(const char *text, int state) {
         if (strncmp(name, text, len) == 0) {
             return strdup(name);
         }
+    }
+    return external_command_generator(text, state);
+}
+
+static char* external_command_generator(const char *text, int state) {
+    static std::vector<std::string> matches;
+    static size_t idx;
+    static bool initialized;
+
+    if (!state) {
+        matches.clear();
+        idx = 0;
+        initialized = false;
+    }
+
+    if (!initialized) {
+        initialized = true;
+        size_t len = strlen(text);
+        const char* pathEnv = getenv("PATH");
+        if (pathEnv) {
+            std::vector<std::string> dirs = split(std::string(pathEnv)); // uses utils::split(':')
+            for (const auto &d : dirs) {
+                std::string dir = d.empty() ? "." : d;
+                DIR *dp = opendir(dir.c_str());
+                if (!dp) continue;
+                struct dirent *entry;
+                while ((entry = readdir(dp)) != nullptr) {
+                    const char *nm = entry->d_name;
+                    if (len != 0 && strncmp(nm, text, len) != 0) continue;
+                    std::string full = dir + "/" + nm;
+                    struct stat st;
+                    if (stat(full.c_str(), &st) == 0) {
+                        if ((S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)) && access(full.c_str(), X_OK) == 0) {
+                            matches.emplace_back(nm);
+                        }
+                    }
+                }
+                closedir(dp);
+            }
+        }
+        std::sort(matches.begin(), matches.end());
+        matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
+    }
+
+    if (idx < matches.size()) {
+        std::string out = matches[idx++];
+        // Do NOT add a trailing space; readline will handle spacing
+        // out.push_back(' ');
+        return strdup(out.c_str());
     }
     return nullptr;
 }
