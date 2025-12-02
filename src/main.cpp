@@ -19,6 +19,9 @@ int main() {
 
     vector<string> builtins = {"echo", "type", "exit", "pwd", "cd", "history"};
     // vector<string> history_vec;
+    const char* histEnv = getenv("HISTFILE");
+    string histPath = histEnv ? string(histEnv) : "";
+    History::loadFromFile(histPath);
 
     while (true) {
         char* input_cstr = readline("$ ");
@@ -92,6 +95,10 @@ int main() {
             dup2(savedStdout, parsed.redirectFd);
             close(savedStdout);
         }
+    }
+
+    if(!histPath.empty()) {
+        History::saveSnapshotToFile(histPath);
     }
 
     return 0;

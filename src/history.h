@@ -15,6 +15,9 @@ public:
     static void add(const string& cmd);
 
     static void handle(const string& payload);
+
+    static void loadFromFile(const string& path);
+    static void saveSnapshotToFile(const string& path);
 };
 
 #endif

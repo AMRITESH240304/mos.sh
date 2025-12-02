@@ -18,6 +18,33 @@ void History::add(const string& cmd) {
     }
 }
 
+void History::loadFromFile(const string& path) {
+    if (path.empty()) return;
+    ifstream file(path);
+    if(!file.is_open()) return;
+    string line;
+    while(getline(file,line)) {
+        if(!line.empty()) {
+            history.push_back(line);
+            add_history(line.c_str());
+        }
+    }
+    file.close();
+
+    lastFlushedIdx = history.size();
+}
+
+void History::saveSnapshotToFile(const string& path) {
+    if (path.empty()) return;
+    ofstream out(path, ios::out | ios::trunc);
+    if(!out.is_open()) return;
+    for (auto line: history){
+        out << line << '\n';
+    }
+    out.close();
+    lastFlushedIdx = history.size();
+}
+
 void History::handle(const string& payload) {
     vector<string> args;
     string word;
