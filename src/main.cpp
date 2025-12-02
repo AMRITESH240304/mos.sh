@@ -11,13 +11,20 @@
 #include "history.h"
 
 using namespace std;
+static vector<string> builtins = {"echo", "type", "exit", "pwd", "cd", "history"};
+
+// tab completion reference:
+// https://thoughtbot.com/blog/tab-completion-in-gnu-readline
+static char** charater_command_completion(const char *, int, int);
+static char* character_command_generator(const char *, int);
 
 int main() {
     // Flush after every cout / cerr
     cout << unitbuf;
     cerr << unitbuf;
 
-    vector<string> builtins = {"echo", "type", "exit", "pwd", "cd", "history"};
+    rl_attempted_completion_function = charater_command_completion;
+
     // vector<string> history_vec;
     const char* histEnv = getenv("HISTFILE");
     string histPath = histEnv ? string(histEnv) : "";
@@ -102,4 +109,27 @@ int main() {
     }
 
     return 0;
+}
+
+
+static char** charater_command_completion(const char *text, int start, int end) {
+    rl_attempted_completion_over = 1;
+    return rl_completion_matches(text, character_command_generator);
+}   
+
+static char* character_command_generator(const char *text, int state) {
+    static size_t list_index;
+    static size_t len;
+    if (!state) {
+        list_index = 0;
+        len = strlen(text);
+    }
+
+    const char* name;
+    while (list_index < builtins.size() && (name = builtins[list_index++].c_str())) {
+        if (strncmp(name, text, len) == 0) {
+            return strdup(name);
+        }
+    }
+    return nullptr;
 }
