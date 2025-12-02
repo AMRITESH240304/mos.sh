@@ -6,12 +6,12 @@
 #include <sstream>
 #include <readline/readline.h>
 #include <readline/history.h>
-#include "commands.h"
-#include "utils.h"
-#include "history.h"
+#include "commands/commands.h"
+#include "utils/utils.h"
+#include "history/history.h"
 #include <dirent.h>
 #include <sys/stat.h>
-#include "completion.h"
+#include "auto_completion/completion.h"
 #include <algorithm>
 
 using namespace std;

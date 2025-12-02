@@ -1,5 +1,5 @@
 #include "commands.h"
-#include "utils.h"
+#include "../utils/utils.h"
 #include <iostream>
 #include <algorithm>
 #include <cstdlib>

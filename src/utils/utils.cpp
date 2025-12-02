@@ -1,5 +1,5 @@
-#include "utils.h"
-#include "helper.h"
+#include "../utils/utils.h"
+#include "../helper/helper.h"
 #include <cctype>
 
 using namespace std;

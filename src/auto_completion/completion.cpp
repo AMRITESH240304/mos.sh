@@ -1,5 +1,5 @@
 #include "completion.h"
-#include "utils.h"
+#include "../utils/utils.h"
 
 #include <readline/readline.h>
 #include <readline/history.h>
