@@ -10,6 +10,7 @@
 #include <sstream>
 #include <fcntl.h>
 #include <cstdio>
+#include "../utils/env.h"
 
 using namespace std;
 
@@ -84,63 +85,48 @@ void CommandHandler::handlePipeline(const std::string &left, const std::string &
 
 
 void CommandHandler::externalProgram(const string& command) {
-    const char* pathenv = getenv("PATH");
-    if (pathenv) {
-        vector<string> paths = split(pathenv);
-        vector<string> args = split_args(command);
-        
-        vector<char*> argv;
+    vector<string> args = split_args(command);
+    if (args.empty()) return;
 
-        for (auto& arg : args){
-            argv.push_back(const_cast<char*>(arg.c_str()));
-        }
-         
-        argv.push_back(nullptr);  
+    string fullPath = EnvCache::findExecutable(args[0]);
 
-        for (auto dir : paths) {
-            string fullpath = dir + "/" + args[0];
-            if (access(fullpath.c_str(), X_OK) == 0) {
-                pid_t pid = fork();
-                if (pid == 0) {
-                    execv(fullpath.c_str(), argv.data());
-                    perror("execv failed");
-                    exit(1);
-                } else if (pid > 0) {
-                    int status;
-                    waitpid(pid, &status, 0);
-                    return;
-                } else {
-                    perror("fork failed");
-                    return;
-                }
-            }
-        }
+    if (fullPath.empty()) {
+        throw runtime_error("Command not found");
     }
-    throw runtime_error("Command not found");
+
+    vector<char*> argv;
+    for (auto& arg : args){
+        argv.push_back(const_cast<char*>(arg.c_str()));
+    }
+    argv.push_back(nullptr);
+
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Child process
+        execv(fullPath.c_str(), argv.data());
+        
+        // If execv returns, it failed
+        perror("execv failed");
+        exit(1);
+    } else if (pid > 0) {
+        // Parent process
+        int status;
+        waitpid(pid, &status, 0);
+    } else {
+        perror("fork failed");
+    }
 }
 
 void CommandHandler::handleType(const string& args, const vector<string>& builtins) {
     if (isBuiltin(args, builtins)) {
         cout << args << " is a shell builtin" << endl;
     } else {
-        bool found = false;
-        const char* pathenv = getenv("PATH");
-        if (pathenv) {
-            vector<string> paths = split(pathenv);
-            for (auto i:paths) {
-                string fullpath = i + "/" + args;
-                if (access(fullpath.c_str(), X_OK) == 0) {
-                    cout << args << " is " << fullpath << endl;
-                    found = true;
-                    break;
-                }
-            }
+        string fullPath = EnvCache::findExecutable(args);
+        
+        if (!fullPath.empty()) {
+            cout << args << " is " << fullPath << endl;
         } else {
-            cout << "PATH not set" << endl;
-        }
-        if (!found){
             cout << args << ": not found" << endl;
-            return;
         }
     }
 }

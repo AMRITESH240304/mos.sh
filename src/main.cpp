@@ -12,6 +12,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include "auto_completion/completion.h"
+#include "utils/env.h"
 #include <algorithm>
 
 using namespace std;
@@ -25,6 +26,7 @@ int main() {
     cerr << unitbuf;
 
     init_completion(builtins);
+    EnvCache::initialize();
 
     // vector<string> history_vec;
     const char* histEnv = getenv("HISTFILE");
