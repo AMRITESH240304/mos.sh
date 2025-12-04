@@ -1,6 +1,6 @@
 #include "completion.h"
 #include "../utils/utils.h"
-
+#include "../utils/env.h"
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <dirent.h>
@@ -49,7 +49,7 @@ static char* command_generator(const char *text, int state) {
 }
 
 static char* external_command_generator(const char *text, int state) {
-    static vector<string> matches;
+    static std::vector<std::string> matches;
     static size_t idx;
     static bool initialized;
 
@@ -62,18 +62,20 @@ static char* external_command_generator(const char *text, int state) {
     if (!initialized) {
         initialized = true;
         size_t len = strlen(text);
-        const char* pathEnv = getenv("PATH");
-        if (pathEnv) {
-            vector<string> dirs = split(string(pathEnv)); 
-            for (const auto &d : dirs) {
-                string dir = d.empty() ? "." : d;
+        const vector<string>& pathDirs = EnvCache::pathDirs;
+
+        if (!pathDirs.empty()) { 
+            
+            for (const auto &d : pathDirs) { 
+                std::string dir = d.empty() ? "." : d;
                 DIR *dp = opendir(dir.c_str());
                 if (!dp) continue;
                 struct dirent *entry;
                 while ((entry = readdir(dp)) != nullptr) {
                     const char *nm = entry->d_name;
                     if (len != 0 && strncmp(nm, text, len) != 0) continue;
-                    string full = dir + "/" + nm;
+                    
+                    std::string full = dir + "/" + nm;
                     struct stat st;
                     if (stat(full.c_str(), &st) == 0) {
                         if ((S_ISREG(st.st_mode) || S_ISLNK(st.st_mode)) && access(full.c_str(), X_OK) == 0) {
@@ -84,12 +86,13 @@ static char* external_command_generator(const char *text, int state) {
                 closedir(dp);
             }
         }
-        sort(matches.begin(), matches.end());
-        matches.erase(unique(matches.begin(), matches.end()), matches.end());
+        
+        std::sort(matches.begin(), matches.end());
+        matches.erase(std::unique(matches.begin(), matches.end()), matches.end());
     }
 
     if (idx < matches.size()) {
-        const string &out = matches[idx++];
+        const std::string &out = matches[idx++];
         return strdup(out.c_str());
     }
     return nullptr;
