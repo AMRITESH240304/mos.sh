@@ -132,26 +132,24 @@ void CommandHandler::handleType(const string& args, const vector<string>& builti
 }
 
 void CommandHandler::handleNavigation(const string& path) {
+    string targetPath = path;
 
-    if (path[0] == '~') {
-        const char* home = getenv("HOME");
-        if (home) {
-            string newPath = string(home) + path.substr(1);
-            if (chdir(newPath.c_str()) != 0) {
-                std::perror("cd failed");
-            }
+    if (path.empty() || path == "~") {
+        if (!EnvCache::homeDir.empty()) {
+            targetPath = EnvCache::homeDir;
+        } else {
+            cerr << "cd: HOME environment variable is not set" << endl;
             return;
         }
     }
-
-    struct stat info;
-    if (stat(path.c_str(), &info) != 0) {
-        std::cout << "cd: " << path << ": No such file or directory" << std::endl;
-        return;
+    else if (path.rfind("~/", 0) == 0) {
+        if (!EnvCache::homeDir.empty()) {
+            targetPath = EnvCache::homeDir + path.substr(1);
+        }
     }
 
-    if (chdir(path.c_str()) != 0) {
-        std::perror("cd failed");
+    if (chdir(targetPath.c_str()) != 0) {
+        std::perror(("cd: " + path).c_str());
         return;
     }
 }
